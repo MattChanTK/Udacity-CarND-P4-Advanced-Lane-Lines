@@ -3,6 +3,18 @@ import cv2
 import glob
 
 
+class area_of_interest:
+
+    def __init__(self, height, width):
+        self.left_bottom = (width*0.15, height*0.95)
+        self.right_bottom = (width*0.87, height*0.95)
+        self.left_top = (width*0.45, height*0.62)
+        self.right_top = (width*0.57, height*0.62)
+
+    @property
+    def vertices(self):
+        return np.array([[self.left_top, self.right_top, self.right_bottom, self.left_bottom]], dtype=np.int32)
+
 # Black out region of the image that is outside a polygon defined by "vertices"
 def region_of_interest(img, vertices):
     # defining a blank mask to start with
@@ -79,14 +91,14 @@ def edge_detection_pipline(img):
     gray = cv2.cvtColor(processed_img, cv2.COLOR_RGB2GRAY)
 
     # Define sobel kernel size
-    ksize = 5
+    ksize = 7
 
     # Apply each of the thresholding functions
     sobel_x, sobel_y = get_sobel_filtered_imgs(gray, sobel_kernel=ksize)
-    gradient_x = abs_thresh(sobel_x, thresh=(40, 255))
-    gradient_y = abs_thresh(sobel_y, thresh=(70, 255))
-    mag_binary = mag_thresh(sobel_x, sobel_y, mag_thresh=(55, 255))
-    dir_binary = dir_threshold(sobel_x, sobel_y, thresh=(.75, 1.05))
+    gradient_x = abs_thresh(sobel_x, thresh=(55, 255))
+    gradient_y = abs_thresh(sobel_y, thresh=(75, 255))
+    mag_binary = mag_thresh(sobel_x, sobel_y, mag_thresh=(50, 255))
+    dir_binary = dir_threshold(sobel_x, sobel_y, thresh=(np.pi / 4, np.pi / 3))
 
     # Combine all the filters into one mask
     combined = np.zeros_like(dir_binary)
@@ -103,11 +115,7 @@ def edge_detection_pipline(img):
 
     # Defining vertices for marked area
     img_shape = img.shape
-    left_bottom = (img_shape[1]*0.15, img_shape[0]*0.9)
-    right_bottom = (img_shape[1]*0.85, img_shape[0]*0.9)
-    left_top = (img_shape[1]*0.45, img_shape[0]*0.6)
-    right_top = (img_shape[1]*0.55, img_shape[0]*0.6)
-    vertices = np.array([[left_top, right_top, right_bottom, left_bottom]], dtype=np.int32)
+    vertices = area_of_interest(img_shape[0], img_shape[1]).vertices
 
     # Masked area
     color_binary = region_of_interest(color_binary, vertices)
@@ -118,18 +126,18 @@ def edge_detection_pipline(img):
     return color_binary
 
 
-images = glob.glob("./result_images/undistorted*.jpg")
+if __name__ == "__main__":
+    images = glob.glob("./result_images/undistorted*.jpg")
 
-for idx, img_filename in enumerate(images):
+    for idx, img_filename in enumerate(images):
 
-    undistorted_img = cv2.imread(img_filename)
-    processed_img = edge_detection_pipline(undistorted_img)
-    #cv2.imshow("image", undistorted_img)
-    #cv2.waitKey(0)
-    cv2.imshow("image", processed_img)
-    cv2.waitKey(0)
+        undistorted_img = cv2.imread(img_filename)
+        processed_img = edge_detection_pipline(undistorted_img)
+        #cv2.imshow("image", undistorted_img)
+        #cv2.waitKey(0)
+        # cv2.imshow("image", processed_img)
+        # cv2.waitKey(0)
 
-    write_name = "./result_images/binary" + str(idx) + ".jpg"
-    cv2.imwrite(write_name, processed_img)
-
+        write_name = "./result_images/binary" + str(idx) + ".jpg"
+        cv2.imwrite(write_name, processed_img)
 

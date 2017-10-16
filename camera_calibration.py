@@ -41,18 +41,20 @@ for idx, img_filename in enumerate(images):
     else:
         print("unable to find corners of ", img_filename)
 
-# Load Image for reference
-img = cv2.imread('./camera_cal/calibration01.jpg')
-img_size = (img.shape[1], img.shape[0])
-cv2.imshow("image", img)
-# cv2.waitKey(0)
 
-# Do camera calibration given object points and image points
-ret, mtx, dist, _, _ = cv2.calibrateCamera([obj_points]*len(img_points), img_points, img_size, None, None)
-dst = cv2.undistort(img, mtx, dist, None, mtx)
+if __name__ == "__main__":
+    # Load Image for reference
+    img = cv2.imread('./camera_cal/calibration01.jpg')
+    img_size = (img.shape[1], img.shape[0])
+    cv2.imshow("image", img)
+    # cv2.waitKey(0)
 
-# Save the camera calibration result for later use
-dist_pickle = {}
-dist_pickle["mtx"] = mtx
-dist_pickle["dist"] = dist
-pickle.dump(dist_pickle, open("calibration.p", "wb" ) )
+    # Do camera calibration given object points and image points
+    ret, mtx, dist, _, _ = cv2.calibrateCamera([obj_points]*len(img_points), img_points, img_size, None, None)
+    dst = cv2.undistort(img, mtx, dist, None, mtx)
+
+    # Save the camera calibration result for later use
+    dist_pickle = {}
+    dist_pickle["mtx"] = mtx
+    dist_pickle["dist"] = dist
+    pickle.dump(dist_pickle, open("calibration.p", "wb" ) )
